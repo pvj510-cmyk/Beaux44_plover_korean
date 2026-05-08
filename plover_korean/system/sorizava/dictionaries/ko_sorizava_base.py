@@ -87,7 +87,7 @@ FINALS = {
 
 INITIAL_KEYS = Stroke("ㅊㅌㅋㅂㅍㅅㄷㅈㄱㅁㄹㄴㅎ")
 VOWEL_KEYS = Stroke("ㅢㅗㅏㅜㅡㅓㅣ")
-FINAL_KEYS = Stroke("-ㅋㄲㅎㅌㅊㅍㄱㄴㄹㅅㅂㅆㅇㅁㄷㅈ")
+FINAL_KEYS = Stroke("-ㄲㅎㅌㅊㅍㅋㄱㄴㄹㅅㅂㅆㅇㅁㄷㅈ")
 
 
 def lookup(strokes: Tuple[str]) -> str:
