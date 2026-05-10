@@ -5,6 +5,7 @@ from typing import Tuple, Dict, List, Optional
 # fmt: off
 # Consonant groups don't internally follow a steno order when constructing words.
 KEYS: Tuple[str] = (
+    'A-',
     # 초성 - Initial consonant
     'ㅊ-', 'ㅌ-', 'ㅋ-', 'ㅂ-', 'ㅍ-',
     'ㅅ-', 'ㄷ-', 'ㅈ-', 'ㄱ-', # '-ㅋ',
