@@ -5,7 +5,6 @@ from typing import Tuple, Dict, List, Optional
 # fmt: off
 # Consonant groups don't internally follow a steno order when constructing words.
 KEYS: Tuple[str] = (
-    'A-',
     # 초성 - Initial consonant
     'ㅊ-', 'ㅌ-', 'ㅋ-', 'ㅂ-', 'ㅍ-',
     'ㅅ-', 'ㄷ-', 'ㅈ-', 'ㄱ-', # '-ㅋ',
@@ -22,7 +21,7 @@ KEYS: Tuple[str] = (
     '-ㅆ', '-ㅇ', '-ㅁ', '-ㄷ', '-ㅈ',
 
     # 숫자를 맨 뒤에 배치 (동시 입력 시 한글 뒤에 숫자가 붙음)
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',MY_ACTION_A
 )
 
 IMPLICIT_HYPHEN_KEYS: Tuple[str] = (
