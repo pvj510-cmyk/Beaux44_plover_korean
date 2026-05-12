@@ -259,3 +259,48 @@ def apply_particle_myeo(context: _Context, args: str) -> _Action:
         consonant_particle='이며',
         exception_consonant=None
     ))
+
+
+# 파일 맨 아래에 붙여넣기
+def undo_last_action(context: _Context, args: str) -> _Action:
+    """방금 입력한 약어(단어)를 삭제합니다. 연속 실행 가능."""
+    action: _Action = _Action()
+    # Plover의 현재 컨텍스트에서 마지막 1단어를 가져옴
+    last_words = context.last_words(1)
+    
+    if last_words:
+        action.prev_replace = last_words[0]  # 마지막 단어를 치환 대상으로 설정
+        action.text = ""                     # 빈 값으로 치환 (즉, 삭제)
+        action.prev_attach = False           # 앞 단어와의 결합 해제 (안전 장치)
+    return action
+
+def apply_particle_terminal_n(context: _Context, args: str) -> _Action:
+    """마지막 글자에 받침 'ㄴ'을 결합합니다. (-ㅋㄴㄹㅅ)"""
+    rule_info = ParticleRuleInfo(
+        vowel_particle='ㄴ',
+        consonant_particle='', 
+        exception_consonant=None
+    )
+    action: _Action = context.copy_last_action()
+    last_word_list = context.last_words(1)
+    
+    if not last_word_list:
+        return action
+
+    original_text = last_word_list[0]
+    stripped_text = original_text.rstrip()
+    spaces = original_text[len(stripped_text):]
+
+    if not stripped_text:
+        return action
+
+    processed_text = attach_particle(stripped_text, rule_info)
+    
+    if processed_text == stripped_text:
+        return action
+
+    action.prev_replace = original_text
+    action.prev_attach = True
+    action.text = processed_text + spaces
+    
+    return action
