@@ -274,7 +274,7 @@ def undo_last_action(context: _Context, args: str) -> _Action:
     return action
 
 def apply_particle_terminal_n(context: _Context, args: str) -> _Action:
-    """마지막 글자에 받침 'ㄴ'을 합성합니다. (예: 나라 -> 난)"""
+    """마지막 글자에 받침 'ㄴ'을 합성합니다. (예: 나라 -> 나란)"""
     action: _Action = context.copy_last_action()
     last_word_list = context.last_words(1)
     if not last_word_list: return action
@@ -282,19 +282,22 @@ def apply_particle_terminal_n(context: _Context, args: str) -> _Action:
     original_text = last_word_list[0]
     if not original_text: return action
 
+    # 마지막 글자 하나만 추출 (예: '나라'에서 '라')
     last_char = original_text[-1]
     
-    # 한글인지 확인하고 받침 'ㄴ' 합성 (유니코드 계산)
+    # 한글인지 확인하고 받침 'ㄴ' 합성
     if '가' <= last_char <= '힣':
         char_code = ord(last_char) - 0xAC00
         jong = char_code % 28
-        # 받침이 없을 때만 'ㄴ'(코드 4)을 추가
+        
+        # 받침이 없을 때만 'ㄴ'(코드 4)을 추가하여 합성
         if jong == 0:
             new_char = chr(ord(last_char) + 4)
             action.prev_replace = original_text
+            # 앞부분은 그대로 두고 마지막 글자만 바뀐 글자로 교체 (예: '나' + '란')
             action.text = original_text[:-1] + new_char
             action.prev_attach = True
             return action
 
-    # 한글이 아니거나 이미 받침이 있으면 아무것도 안 함
+    # 한글이 아니거나 이미 받침이 있으면 변환 없이 그대로 반환
     return action
