@@ -265,12 +265,19 @@ def apply_particle_myeo(context: _Context, args: str) -> _Action:
 import unicodedata
 
 def undo_last_action(context: _Context, args: str) -> _Action:
-    """방금 입력한 스트로크 하나를 취소합니다."""
+    """마지막으로 입력된 스트로크(약어 1개)만 정확히 삭제합니다."""
     action: _Action = _Action()
-    # 단순 삭제가 아니라 Plover의 표준 '실행 취소' 동작을 수행하도록 유도
-    action.prev_attach = True
-    action.prev_replace = context.last_words(1)[0] if context.last_words(1) else ""
-    action.text = "" 
+    
+    # context.last_action은 Plover가 방금 수행한 마지막 동작 객체입니다.
+    last_action = context.last_action
+    
+    if last_action:
+        # 마지막 동작이 출력한 텍스트만큼을 찾아내서 삭제하도록 설정
+        action.prev_replace = last_action.text
+        action.text = ""
+        # 앞 단어와의 연결을 끊지 않고 딱 그 부분만 도려냄
+        action.prev_attach = True  
+    
     return action
 
 def apply_particle_terminal_n(context: _Context, args: str) -> _Action:
