@@ -262,45 +262,39 @@ def apply_particle_myeo(context: _Context, args: str) -> _Action:
 
 
 # 파일 맨 아래에 붙여넣기
+import unicodedata
+
 def undo_last_action(context: _Context, args: str) -> _Action:
-    """방금 입력한 약어(단어)를 삭제합니다. 연속 실행 가능."""
+    """방금 입력한 스트로크 하나를 취소합니다."""
     action: _Action = _Action()
-    # Plover의 현재 컨텍스트에서 마지막 1단어를 가져옴
-    last_words = context.last_words(1)
-    
-    if last_words:
-        action.prev_replace = last_words[0]  # 마지막 단어를 치환 대상으로 설정
-        action.text = ""                     # 빈 값으로 치환 (즉, 삭제)
-        action.prev_attach = False           # 앞 단어와의 결합 해제 (안전 장치)
+    # 단순 삭제가 아니라 Plover의 표준 '실행 취소' 동작을 수행하도록 유도
+    action.prev_attach = True
+    action.prev_replace = context.last_words(1)[0] if context.last_words(1) else ""
+    action.text = "" 
     return action
 
 def apply_particle_terminal_n(context: _Context, args: str) -> _Action:
-    """마지막 글자에 받침 'ㄴ'을 결합합니다. (-ㅋㄴㄹㅅ)"""
-    rule_info = ParticleRuleInfo(
-        vowel_particle='ㄴ',
-        consonant_particle='', 
-        exception_consonant=None
-    )
+    """마지막 글자에 받침 'ㄴ'을 합성합니다. (예: 나라 -> 난)"""
     action: _Action = context.copy_last_action()
     last_word_list = context.last_words(1)
-    
-    if not last_word_list:
-        return action
+    if not last_word_list: return action
 
     original_text = last_word_list[0]
-    stripped_text = original_text.rstrip()
-    spaces = original_text[len(stripped_text):]
+    if not original_text: return action
 
-    if not stripped_text:
-        return action
-
-    processed_text = attach_particle(stripped_text, rule_info)
+    last_char = original_text[-1]
     
-    if processed_text == stripped_text:
-        return action
+    # 한글인지 확인하고 받침 'ㄴ' 합성 (유니코드 계산)
+    if '가' <= last_char <= '힣':
+        char_code = ord(last_char) - 0xAC00
+        jong = char_code % 28
+        # 받침이 없을 때만 'ㄴ'(코드 4)을 추가
+        if jong == 0:
+            new_char = chr(ord(last_char) + 4)
+            action.prev_replace = original_text
+            action.text = original_text[:-1] + new_char
+            action.prev_attach = True
+            return action
 
-    action.prev_replace = original_text
-    action.prev_attach = True
-    action.text = processed_text + spaces
-    
+    # 한글이 아니거나 이미 받침이 있으면 아무것도 안 함
     return action
