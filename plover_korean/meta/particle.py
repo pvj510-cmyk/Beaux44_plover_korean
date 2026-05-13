@@ -265,13 +265,30 @@ def apply_particle_myeo(context: _Context, args: str) -> _Action:
 import unicodedata
 
 def undo_last_action(context: _Context, args: str) -> _Action:
-    """Plover 엔진의 내부 기능을 직접 호출하여 마지막 입력을 취소합니다."""
-    # Plover 엔진에게 '방금 한 스트로크를 취소하라'고 직접 명령합니다.
-    # 이 방식은 띄어쓰기 유무나 약어 길이에 상관없이 '1회 타격'을 정확히 되돌립니다.
-    context.engine.undo_last_stroke()
+    """화면에서 즉시 마지막 입력을 지우도록 강제합니다."""
+    action: _Action = _Action()
     
-    # 엔진에서 이미 처리를 했으므로, 메타 플러그인에서는 아무런 추가 텍스트를 내뱉지 않습니다.
-    return _Action()
+    # 마지막 단어 1개를 가져옵니다.
+    last_word_list = context.last_words(1)
+    
+    if last_word_list and last_word_list[0]:
+        target = last_word_list[0]
+        
+        # 1. 화면에 있는 글자를 '즉시' 지우도록 설정
+        action.prev_replace = target
+        
+        # 2. 새로운 텍스트는 아무것도 입력하지 않음 (삭제 효과)
+        action.text = ""
+        
+        # 3. Plover 버퍼에서 완전히 도려내기 위해 결합 속성 부여
+        action.prev_attach = True
+        
+        # 4. 중요: 다음 입력이 이 삭제된 자리에 영향을 주지 않도록 상태 초기화
+        action.word = None
+        
+        return action
+
+    return action
 
 def apply_particle_terminal_n(context: _Context, args: str) -> _Action:
     """마지막 글자에 받침 'ㄴ'을 합성합니다. (예: 나라 -> 나란)"""
