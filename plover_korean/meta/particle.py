@@ -265,22 +265,21 @@ def apply_particle_myeo(context: _Context, args: str) -> _Action:
 import unicodedata
 
 def undo_last_action(context: _Context, args: str) -> _Action:
-    """Plover의 내부 이력을 역추적하여 마지막 스트로크를 정확히 취소합니다."""
+    """Plover의 포맷터 이력을 역추적하여 마지막 스트로크를 취소합니다."""
     action: _Action = _Action()
     
-    # 1. Plover의 포맷터에서 이력을 역순으로 탐색
-    # 최근 동작이 '메타 명령'인 경우를 대비해 스택을 확인합니다.
-    for last_item in reversed(context.history):
-        # 텍스트를 출력한 실제 동작을 찾습니다.
-        if last_item.text:
-            action.prev_replace = last_item.text
-            action.text = ""
-            action.prev_attach = True
-            
-            # 2. 중요: 이 동작이 수행된 후 해당 이력을 스택에서 제거하도록 유도
-            # (Plover 버전에 따라 자동으로 관리되지만 명시적 처리가 안전합니다.)
-            break
-            
+    # context 자체 대신 context 내부의 formatter나 엔진 기록을 참조해야 합니다.
+    # 안전하게 이전 단어 목록을 가져와서 마지막 항목을 삭제 대상으로 지정합니다.
+    last_words = context.last_words(1)
+    
+    if last_words:
+        action.prev_replace = last_words[0]
+        action.text = ""
+        action.prev_attach = True
+        
+        # 연속 삭제를 위해 포맷팅 상태를 강제로 업데이트하도록 유도
+        action.word = None 
+    
     return action
 
 def apply_particle_terminal_n(context: _Context, args: str) -> _Action:
