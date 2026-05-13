@@ -265,21 +265,26 @@ def apply_particle_myeo(context: _Context, args: str) -> _Action:
 import unicodedata
 
 def undo_last_action(context: _Context, args: str) -> _Action:
-    """Plover의 포맷터 이력을 역추적하여 마지막 스트로크를 취소합니다."""
+    """띄어쓰기에 상관없이 마지막으로 입력된 약어 덩어리 하나만 삭제합니다."""
     action: _Action = _Action()
     
-    # context 자체 대신 context 내부의 formatter나 엔진 기록을 참조해야 합니다.
-    # 안전하게 이전 단어 목록을 가져와서 마지막 항목을 삭제 대상으로 지정합니다.
-    last_words = context.last_words(1)
+    # context.last_words(1)은 공백에서 끊기지만, 
+    # context.last_action.text는 공백을 포함한 '방금 친 실제 글자'를 가져옵니다.
+    last_action = context.last_action
     
-    if last_words:
-        action.prev_replace = last_words[0]
+    if last_action and last_action.text:
+        # 방금 입력된 텍스트(공백 포함)를 그대로 찾아내서 빈 값으로 바꿉니다.
+        action.prev_replace = last_action.text
         action.text = ""
-        action.prev_attach = True
-        
-        # 연속 삭제를 위해 포맷팅 상태를 강제로 업데이트하도록 유도
-        action.word = None 
-    
+        action.prev_attach = True  # 기존 흐름을 유지하며 해당 부분만 삭제
+    else:
+        # 만약 last_action으로 잡히지 않는 특수 상황엔 단어 단위로 시도
+        last_words = context.last_words(1)
+        if last_words:
+            action.prev_replace = last_words[0]
+            action.text = ""
+            action.prev_attach = True
+
     return action
 
 def apply_particle_terminal_n(context: _Context, args: str) -> _Action:
